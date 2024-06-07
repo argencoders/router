@@ -1,0 +1,47 @@
+{{#docs}}
+  {{{title}}}
+  {{#if description}}@description {{{description}}}{{/if}}
+  {{#if deprecated}}@deprecated {{coalesce deprecationMessage 'Should not be used and will be removed in the future.' }}{{/if}}
+{{/docs}}
+async '{{methodName}}'({{#if arguments}}  
+  {{#with arguments }}
+    {{#if ../isRPC}}
+      data: {{zod body}} 
+    {{else}}
+      args: {
+          {{#if params}}
+            params: {{recordOfZod params}}
+          {{/if}}
+          {{#if query}}
+            query?: {{recordOfZod query}}
+          {{/if}}
+          {{#if body}}
+            body: {{zod body}}
+          {{/if}}
+          {{#if headers}}
+            headers: {{recordOfZod headers}}
+          {{/if}}
+    } 
+    {{/if}}
+  {{/with}}
+{{/if}}) {
+  {{#if deprecated~}}
+    console.warn('[{{methodName}}] endpoint was deprecated - {{coalesce deprecationMessage 'should not be used and will be removed in the future.' }}');
+  {{~/if}}
+  const result = await {{> request}}
+  if (result instanceof Error) {
+    {{#if errors}}
+      const errors = [{{#each errors}}'{{@key}}',{{/each}}] as const;
+      return Result.err(this.handleError(result, errors as unknown as string[]) as (typeof errors)[number]);
+    {{else}}
+      this.handleError(result);
+    {{/if}}
+  }
+
+  {{#if returnType}}
+    const decodedResult = decodeObject(result);
+    {{#if errors}}return Result.ok(decodedResult as {{zod returnType}});{{else}}return decodedResult as {{zod returnType}}{{/if}}
+  {{else}}
+    {{#if errors}}return Result.ok(undefined){{/if}}
+  {{/if}}
+}

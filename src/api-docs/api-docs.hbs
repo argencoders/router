@@ -1,0 +1,28 @@
+<html>
+  <head>
+    <meta charset='utf-8' />
+    <script type='module' src='https://unpkg.com/rapidoc/dist/rapidoc-min.js'></script>
+  </head>
+  <body>
+    <rapi-doc
+      id='docs'
+      heading-text='backend-template API'
+      persist-auth='true'
+      show-method-in-nav-bar='as-colored-text'
+      use-path-in-nav-bar='true'
+      info-description-headings-in-navbar='false'
+      show-header='true'
+      allow-spec-url-load='false'
+      allow-spec-file-load='false'
+      default-schema-tab='example'
+      font-size='largest'
+      render-style='read'
+      allow-advanced-search='false'
+    >
+    </rapi-doc>
+    <script>
+      document.addEventListener('DOMContentLoaded', () => { let docEl = document.getElementById("docs"); const schema =
+      {{{schema}}}; docEl.loadSpec(schema); } )
+    </script>
+  </body>
+</html>

@@ -2,7 +2,7 @@ import { Express, Request as ExpressRequest } from "express";
 import { IContainer, InstanceDefinition, LifeTime } from "hardwired";
 import { ZodSchema } from "zod";
 import { AnyRoute, RouteMethod, ISession, RouteConfig, PUBLIC } from "./types.js";
-import IRequestLogger from "./logger.js";
+import IRequestLogger from "./request-logger.js";
 import RequestHandler from "./request-handler.js";
 import { OpenApiOptions } from "./openapi-generator.js";
 import ApiDocs from "./api-docs/api-docs.js";

@@ -3,7 +3,7 @@ import { AnyRouteConfig, ISession, PUBLIC } from "./types.js";
 import { IContainer, InstanceDefinition, LifeTime } from "hardwired";
 import { ZodError, ZodIssue, z } from "zod";
 import ApiError from "./api-error.js";
-import IRequestLogger, { LoggerLevel } from "./logger.js";
+import IRequestLogger, { LoggerLevel } from "./request-logger.js";
 import { Result, encodeObject } from "./utils.js";
 import { differenceInMilliseconds } from "date-fns";
 import {

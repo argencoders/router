@@ -3,7 +3,7 @@ import RequestHandler from "./request-handler.js";
 import { NextFunction, Request as ExpressRequest, Response as ExpressResponse } from "express";
 import { mock } from "vitest-mock-extended";
 import { IContainer, InstanceDefinition, LifeTime, container } from "hardwired";
-import IRequestLogger from "./logger.js";
+import IRequestLogger from "./request-logger.js";
 import { ZodSchema, z } from "zod";
 import { PUBLIC } from "./index.js";
 

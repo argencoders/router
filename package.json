@@ -6,7 +6,7 @@
   "types": "dist/index.d.ts",
   "type": "module",
   "scripts": {
-    "copy-templates": "mkdirp dist/api-docs dist/client-generator/templates && cp src/api-docs/*.hbs dist/api-docs/ && cp src/client-generator/templates/*.hbs dist/client-generator/templates/",
+    "copy-templates": "mkdirp dist/api-docs dist/client-generator/templates && cpy src/api-docs/*.hbs dist/api-docs/ && cpy src/client-generator/templates/*.hbs dist/client-generator/templates/",
     "build": "tsc && npm run-script copy-templates",
     "test": "vitest"
   },
@@ -16,10 +16,11 @@
   "devDependencies": {
     "@types/node": "^20.14.1",
     "@types/supertest": "^6.0.2",
+    "cpy-cli": "^5.0.0",
     "mkdirp": "^3.0.1",
     "supertest": "^7.0.0",
     "typescript": "^5.4.5",
-    "vitest": "^0.33.0",
+    "vitest": "^3.2.4",
     "vitest-mock-extended": "^1.1.3"
   },
   "peerDependencies": {

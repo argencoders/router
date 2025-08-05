@@ -1,7 +1,7 @@
 /// <reference types="vitest" />
 // Configure Vitest (https://vitest.dev/config/)
 
-import { defineConfig } from "vite";
+import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   test: {
@@ -13,7 +13,5 @@ export default defineConfig({
     mockReset: true,
     restoreMocks: true,
     testTimeout: 5000,
-    maxThreads: 1,
-    minThreads: 1,
   },
 });

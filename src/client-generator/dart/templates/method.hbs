@@ -6,20 +6,20 @@
 async '{{methodName}}'({{#if arguments}}  
   {{#with arguments }}
     {{#if ../isRPC}}
-      data: {{zod body}} 
+      data: {{zodRecord body}} 
     {{else}}
       args: {
           {{#if params}}
-            params: {{recordOfZod params}}
+            params: {{zodRecord params}}
           {{/if}}
           {{#if query}}
-            query?: {{recordOfZod query}}
+            query?: {{zodRecord query}}
           {{/if}}
           {{#if body}}
-            body: {{zod body}}
+            body: {{zodRecord body}}
           {{/if}}
           {{#if headers}}
-            headers: {{recordOfZod headers}}
+            headers: {{zodRecord headers}}
           {{/if}}
     } 
     {{/if}}
@@ -40,7 +40,7 @@ async '{{methodName}}'({{#if arguments}}
 
   {{#if returnType}}
     const decodedResult = decodeObject(result);
-    {{#if errors}}return Result.ok(decodedResult as {{zod returnType}});{{else}}return decodedResult as {{zod returnType}}{{/if}}
+    {{#if errors}}return Result.ok(decodedResult as {{zodRecord returnType}});{{else}}return decodedResult as {{zodRecord returnType}}{{/if}}
   {{else}}
     {{#if errors}}return Result.ok(undefined){{/if}}
   {{/if}}

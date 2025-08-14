@@ -1,0 +1,10 @@
+{{#if arguments}}
+  {{#with arguments}}
+    {{#if body}}
+      {{zodDeclarations body}}
+    {{/if}}
+    {{#if params}}
+      {{zodDeclarations params}}
+    {{/if}}
+  {{/with}}
+{{/if}}

@@ -1,9 +1,9 @@
-import { ZodSchema } from "zod";
-import { printNode, zodToTs } from "zod-to-ts";
+import { z, ZodSchema } from "zod";
 import Handlebars, { HelperOptions } from "handlebars";
 import { loadTextFile } from "../../utils.js";
 import { resolve, dirname } from "path";
 import { fileURLToPath } from "url";
+import { ParsedZodSchema } from "./parsed-zod-schema.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -16,17 +16,16 @@ export default function assembleTemplates() {
     return arg1 ?? arg2;
   });
 
-  Handlebars.registerHelper("zod", (schema?: ZodSchema) => {
-    return new Handlebars.SafeString(schema ? printNode(zodToTs(schema).node) : "undefined");
+  Handlebars.registerHelper("zodDeclarations", (schema?: ZodSchema) => {
+    if (!schema) return "null";
+    const wrapped = schema instanceof ZodSchema ? schema : z.object(schema);
+    return new Handlebars.SafeString(new ParsedZodSchema(wrapped).getDeclarations());
   });
 
-  Handlebars.registerHelper("recordOfZod", (schema?: Record<string, ZodSchema>) => {
-    if (!schema) return "undefined";
-    const items = Object.keys(schema).map((key) => {
-      const schemaOfKey = schema[key];
-      return `'${key}'${schemaOfKey.isOptional() ? "?" : ""}: ${printNode(zodToTs(schemaOfKey).node)}`;
-    });
-    return new Handlebars.SafeString(`{${items.join(",")}}`);
+  Handlebars.registerHelper("zodRecord", (schema?: ZodSchema | Record<string, ZodSchema>) => {
+    if (!schema) return "null";
+    const wrapped = schema instanceof ZodSchema ? schema : z.object(schema);
+    return new Handlebars.SafeString(new ParsedZodSchema(wrapped).getRecord());
   });
 
   Handlebars.registerHelper("url2Template", (url: string) => {
@@ -49,6 +48,7 @@ export default function assembleTemplates() {
   });
 
   Handlebars.registerPartial("utils", loadTextFile(resolve(__dirname, "./templates/utils.hbs")));
+  Handlebars.registerPartial("declaration", loadTextFile(resolve(__dirname, "./templates/declaration.hbs")));
   Handlebars.registerPartial("method", loadTextFile(resolve(__dirname, "./templates/method.hbs")));
   Handlebars.registerPartial("request", loadTextFile(resolve(__dirname, "./templates/request.hbs")));
   return Handlebars.compile(loadTextFile(resolve(__dirname, "./templates/main.hbs")));

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
-import { ParsedZodSchema } from "./zod-to-dart";
+import { ParsedZodSchema } from "./parsed-zod-schema";
 
 describe("Zod to Dart", () => {
   it("should generate Dart class from zod schema", () => {

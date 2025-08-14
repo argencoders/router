@@ -18,6 +18,10 @@ export class {{className}}HttpError extends Error {
   }
 }
 
+{{#each methods}}
+  {{> declaration}}
+{{/each}}
+
 export class {{className}} {
   private globalHeaders : Record<string, unknown> = { 'api-client': '{{version}}'};
   private versionChecked = false;

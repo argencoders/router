@@ -1,7 +1,6 @@
-import { describe, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import { z } from "zod";
-import { extractDeclarations, typeToDartString, zodToDart } from "./zod-to-dart";
-import { inspect } from "util";
+import { ParsedZodSchema } from "./zod-to-dart";
 
 describe("Zod to Dart", () => {
   it.only("should generate Dart class from zod schema", () => {
@@ -14,9 +13,12 @@ describe("Zod to Dart", () => {
       book: z.object({ color: z.enum(["white", "black"]) }),
     });
 
-    const dart = zodToDart(schema);
-    console.log(inspect(dart, undefined, 15));
-    console.log(extractDeclarations(dart));
-    console.log(typeToDartString(dart));
+    const parsed = new ParsedZodSchema(schema);
+
+    expect(parsed.getDeclarations()).toContain("enum Pets_ColorEnum { red, green, blue }");
+    expect(parsed.getDeclarations()).toContain("enum Book_ColorEnum { white, black }");
+    expect(parsed.getRecord()).toContain(
+      "({String? name, List<String> phones, List<({String name, double? age, Pets_ColorEnum color})> pets, ({Book_ColorEnum color}) book})"
+    );
   });
 });

@@ -3,7 +3,7 @@ import { z } from "zod";
 import { ParsedZodSchema } from "./zod-to-dart";
 
 describe("Zod to Dart", () => {
-  it.only("should generate Dart class from zod schema", () => {
+  it("should generate Dart class from zod schema", () => {
     const schema = z.object({
       name: z.string().optional(),
       phones: z.array(z.string()),
@@ -20,5 +20,17 @@ describe("Zod to Dart", () => {
     expect(parsed.getRecord()).toContain(
       "({String? name, List<String> phones, List<({String name, double? age, Pets_ColorEnum color})> pets, ({Book_ColorEnum color}) book})"
     );
+  });
+
+  it("should handle optional objects", () => {
+    const schema = z
+      .object({
+        name: z.string(),
+      })
+      .optional();
+
+    const parsed = new ParsedZodSchema(schema);
+
+    expect(parsed.getRecord()).toContain("({String name})?");
   });
 });

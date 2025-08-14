@@ -56,8 +56,7 @@ export class ParsedZodSchema {
           isOptional,
         };
       case z.ZodFirstPartyTypeKind.ZodObject:
-        const shape = (schema as ZodObject<any>).shape;
-
+        const shape = isOptional ? schema._def.innerType.shape : (schema as ZodObject<any>).shape;
         return {
           kind: "object",
           isOptional,
@@ -95,7 +94,7 @@ export class ParsedZodSchema {
         case "list":
           return `List<${_record(type.itemType)}>${type.isOptional ? "?" : ""}`;
         case "object":
-          return `({${type.items.map((x) => `${_record(x)} ${x.name}`).join(", ")}})`;
+          return `({${type.items.map((x) => `${_record(x)} ${x.name}`).join(", ")}})${type.isOptional ? "?" : ""}`;
         case "enum":
           return `${type.enumName}Enum`;
       }

@@ -1,0 +1,92 @@
+// DART
+
+{{> utils}}
+
+export const apiVersion = '{{version}}';
+
+export class {{className}}HttpError extends Error {
+  public readonly status : number;
+  public readonly code: string; 
+  public readonly payload: unknown; 
+  public readonly raw: Error
+  constructor(args: { message?: string; status: number; code: string; payload: unknown; raw: Error }) {
+    super(args.message ?? 'HTTP Error');
+    this.status = args.status;
+    this.code = args.code;
+    this.payload = args.payload;
+    this.raw = args.raw;
+  }
+}
+
+export class {{className}} {
+  private globalHeaders : Record<string, unknown> = { 'api-client': '{{version}}'};
+  private versionChecked = false;
+
+  constructor(
+    private readonly requestFn: (
+      method: 'get' | 'post' | 'put' | 'delete', //
+      url: string,
+      options: {
+        query?: Record<string, unknown>;
+        data?: unknown;
+        headers?: Record<string, unknown>;
+      }
+    ) => Promise<{ headers: Record<string, string>; data: unknown } | {{className}}HttpError>,
+  ) {}
+
+  private async request(
+    method: 'get' | 'post' | 'put' | 'delete', //
+    url: string,
+    options: {
+      query?: Record<string, unknown>;
+      data?: unknown;
+      headers?: Record<string, unknown>;
+    },
+  ) {
+    const result = await this.requestFn(method, url, {
+      ...options,
+      headers: { ...this.globalHeaders, ...(options?.headers ?? {}) },
+    });
+
+    if (result instanceof Error) return result;
+    
+    this.checkVersion(result.headers);
+
+    return typeof result.data === 'object' && result.data !== null && !Array.isArray(result.data) && Object.keys(result.data).length === 0
+      ? undefined
+      : result.data;
+  }
+
+  private checkVersion(headers: Record<string, string>) {
+    if (this.versionChecked) return;
+
+    this.versionChecked = true;
+    const serverVersion = (JSON.parse(headers['{{name}}']) as { version: string }).version;
+    if ('{{version}}' !== serverVersion) {
+      console.warn(`Client version {{version}} does not match with Server version ${serverVersion}.`);
+    }
+  }
+
+  private handleError(err: unknown, errorCodes?: string[]) {
+    if (!(err instanceof {{className}}HttpError)) throw err;
+    if (err.status !== 400 || !errorCodes) throw err;
+
+    const knownError = errorCodes.includes(err.code);
+    if (!knownError) throw err;
+
+    return err.code;
+  }
+
+  setGlobalHeader(header: string, value?: unknown) {
+    if (value === undefined) {
+      delete this.globalHeaders[header];
+    } else {
+      this.globalHeaders[header] = value;
+    }
+  }
+
+  {{#each methods}}
+  
+    {{> method}}
+  {{/each}}
+}

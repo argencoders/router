@@ -6,8 +6,8 @@
   "types": "dist/index.d.ts",
   "type": "module",
   "scripts": {
-    "copy-templates": "mkdirp dist/api-docs dist/client-generator/templates && cpy src/api-docs/*.hbs dist/api-docs/ && cpy src/client-generator/templates/*.hbs dist/client-generator/templates/",
-    "build": "tsc && npm run-script copy-templates",
+    "copy-templates": "mkdirp dist/api-docs dist/client-generator/typescript dist/client-generator/typescript/templates dist/client-generator/dart dist/client-generator/dart/templates && cpy src/api-docs/*.hbs dist/api-docs/ && cpy src/client-generator/typescript/templates/*.hbs dist/client-generator/typescript/templates/ && cpy src/client-generator/dart/templates/*.hbs dist/client-generator/dart/templates/",
+    "build": "rimraf ./dist && tsc && npm run-script copy-templates",
     "test": "vitest"
   },
   "keywords": [],
@@ -18,6 +18,7 @@
     "@types/supertest": "^6.0.2",
     "cpy-cli": "^5.0.0",
     "mkdirp": "^3.0.1",
+    "rimraf": "^6.0.1",
     "supertest": "^7.0.0",
     "typescript": "^5.4.5",
     "vitest": "^3.2.4",

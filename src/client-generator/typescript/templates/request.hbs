@@ -1,0 +1,22 @@
+this.request('{{httpMethod}}', `{{{url2Template url}}}`, {
+{{#if arguments}}
+  {{#if isRPC}}
+    data
+  {{else}}
+    {{#with arguments}}
+      query: {
+      {{#each query}}
+        '{{@key}}': args.query?.['{{@key}}'],
+      {{/each}}
+      }, headers: {
+      {{#each headers}}
+        '{{@key}}': args.headers['{{@key}}'],
+      {{/each}}
+      },
+      {{#if body}}
+        data: args.body,
+      {{/if}}
+    {{/with}}
+  {{/if}}
+{{/if}}
+});

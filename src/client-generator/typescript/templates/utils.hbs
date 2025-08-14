@@ -1,0 +1,61 @@
+type Ok<T> = {
+  result: 'ok';
+  ok: true;
+  value: T;
+  valueOrThrow: () => T;
+};
+
+type Err<E> = {
+  result: 'error';
+  ok: false;
+  error: E;
+  valueOrThrow: () => never;
+};
+
+export type ResultSync<T, E = undefined> = E extends undefined ? Ok<T> : Ok<T> | Err<E>;
+export type Result<T, E = undefined> = Promise<ResultSync<T, E>>;
+
+const ok = <T>(value: T): Ok<T> => {
+  const result: Ok<T> = {
+    result: 'ok' as const,
+    ok: true as const,
+    value: value,
+    valueOrThrow: () => valueOrThrow(result),
+  };
+  return result;
+};
+
+const err = <E>(error: E): Err<E> => {
+  const result: Err<E> = {
+    result: 'error' as const,
+    ok: false as const,
+    error: error,
+    valueOrThrow: () => valueOrThrow(result),
+  };
+  return result;
+};
+
+const done = () => ok(undefined);
+function valueOrThrow<T, E>(result: Ok<T> | Err<E>): T {
+  if (result.ok) {
+    return result.value;
+  }
+  throw new Error(String(result.error));
+}
+
+export const Result = { ok, err, done };
+
+
+function decodeObject(value: unknown): unknown {
+  if (Array.isArray(value)) {
+    return value.map(val => decodeObject(val));
+  }
+  if (typeof value === 'object' && value !== null) {
+    if ('$date' in value && typeof value.$date === 'string') {
+      return new Date(value.$date);
+    } else {
+      return Object.fromEntries(Object.entries(value).map(([key, val]) => [key, decodeObject(val)]));
+    }
+  }
+  return value;
+}

@@ -1,96 +1,101 @@
-// DART
+// ignore_for_file: non_constant_identifier_names, camel_case_types, constant_identifier_names
+
+import 'dart:convert';
+import 'dart:io';
+import 'package:http/http.dart' as http;
 
 {{> utils}}
 
-export const apiVersion = '{{version}}';
+enum HttpMethod { GET, POST, PUT, DELETE }
 
-export class {{className}}HttpError extends Error {
-  public readonly status : number;
-  public readonly code: string; 
-  public readonly payload: unknown; 
-  public readonly raw: Error
-  constructor(args: { message?: string; status: number; code: string; payload: unknown; raw: Error }) {
-    super(args.message ?? 'HTTP Error');
-    this.status = args.status;
-    this.code = args.code;
-    this.payload = args.payload;
-    this.raw = args.raw;
-  }
+const apiVersion = '{{version}}';
+
+class {{className}}HttpError extends Error {
+  int status;
+  String code;
+  Map<String, dynamic> payload;
+  HttpException? innerException;
+
+  ApiClientHttpError(
+    this.status,
+    this.code,
+    this.payload, [
+    this.innerException,
+  ]);
 }
+
 
 {{#each methods}}
   {{> declaration}}
 {{/each}}
 
-export class {{className}} {
-  private globalHeaders : Record<string, unknown> = { 'api-client': '{{version}}'};
-  private versionChecked = false;
 
-  constructor(
-    private readonly requestFn: (
-      method: 'get' | 'post' | 'put' | 'delete', //
-      url: string,
-      options: {
-        query?: Record<string, unknown>;
-        data?: unknown;
-        headers?: Record<string, unknown>;
-      }
-    ) => Promise<{ headers: Record<string, string>; data: unknown } | {{className}}HttpError>,
-  ) {}
+{{#each methods}}
+  {{> error}}
+{{/each}}
 
-  private async request(
-    method: 'get' | 'post' | 'put' | 'delete', //
-    url: string,
-    options: {
-      query?: Record<string, unknown>;
-      data?: unknown;
-      headers?: Record<string, unknown>;
-    },
-  ) {
-    const result = await this.requestFn(method, url, {
-      ...options,
-      headers: { ...this.globalHeaders, ...(options?.headers ?? {}) },
-    });
 
-    if (result instanceof Error) return result;
-    
-    this.checkVersion(result.headers);
+class {{className}} {
+  final String baseUrl;
 
-    return typeof result.data === 'object' && result.data !== null && !Array.isArray(result.data) && Object.keys(result.data).length === 0
-      ? undefined
-      : result.data;
-  }
+  {{className}}({required this.baseUrl});
 
-  private checkVersion(headers: Record<string, string>) {
-    if (this.versionChecked) return;
+  Future<Map<String, dynamic>> request(
+    HttpMethod method,
+    String routeUrl, {
+    Map<String, dynamic>? params,
+    Map<String, dynamic>? query,
+    Map<String, dynamic>? body,
+  }) async {
+    http.Response response;
 
-    this.versionChecked = true;
-    const serverVersion = (JSON.parse(headers['{{name}}']) as { version: string }).version;
-    if ('{{version}}' !== serverVersion) {
-      console.warn(`Client version {{version}} does not match with Server version ${serverVersion}.`);
+    String url = routeUrl
+        .split('/')
+        .map((x) => x.startsWith(':') ? params![x] : x)
+        .join('/');
+
+    String queryString = query != null
+        ? query.keys.map((k) => '$k=${query[k]}').join('&')
+        : '';
+
+    final fullUrl = Uri.parse('$baseUrl$url$queryString');
+
+    const headers = {'Content-Type': 'application/json; charset=UTF-8'};
+
+    switch (method) {
+      case HttpMethod.POST:
+        response = await http.post(
+          fullUrl,
+          headers: headers,
+          body: jsonEncode(body),
+        );
+      case HttpMethod.GET:
+        response = await http.get(fullUrl, headers: headers);
+      case HttpMethod.PUT:
+        response = await http.put(
+          fullUrl,
+          headers: headers,
+          body: jsonEncode(body),
+        );
+      case HttpMethod.DELETE:
+        response = await http.delete(fullUrl, headers: headers);
     }
-  }
 
-  private handleError(err: unknown, errorCodes?: string[]) {
-    if (!(err instanceof {{className}}HttpError)) throw err;
-    if (err.status !== 400 || !errorCodes) throw err;
-
-    const knownError = errorCodes.includes(err.code);
-    if (!knownError) throw err;
-
-    return err.code;
-  }
-
-  setGlobalHeader(header: string, value?: unknown) {
-    if (value === undefined) {
-      delete this.globalHeaders[header];
-    } else {
-      this.globalHeaders[header] = value;
+    if (response.statusCode == 200) {
+      final decoded = jsonDecode(response.body);
+      return decoded;
     }
+
+    if (response.statusCode == 400) {
+      final decoded = jsonDecode(response.body);
+      throw {{className}}HttpError(response.statusCode, decoded['code'], decoded);
+    }
+
+    throw Exception('Not implemented');
   }
 
   {{#each methods}}
   
-    {{> method}}
+    {{> method className=../className}}
   {{/each}}
 }

@@ -12,6 +12,10 @@ export default function assembleTemplates() {
     return text.toUpperCase();
   });
 
+  Handlebars.registerHelper("lowercase", (text: string) => {
+    return text.toLowerCase();
+  });
+
   Handlebars.registerHelper("coalesce", (arg1: unknown, arg2: unknown) => {
     return arg1 ?? arg2;
   });
@@ -28,13 +32,16 @@ export default function assembleTemplates() {
     return new Handlebars.SafeString(new ParsedZodSchema(wrapped).getRecord());
   });
 
-  Handlebars.registerHelper("url2Template", (url: string) => {
-    return new Handlebars.SafeString(
-      url
-        .split("/")
-        .map((x) => (x[0] === ":" ? `\${args.params['${x.substring(1)}']}` : x))
-        .join("/")
-    );
+  Handlebars.registerHelper("hidrateFromMap", (variable: string, schema?: Record<string, ZodSchema>) => {
+    if (!schema) return "null";
+    const wrapped = schema instanceof ZodSchema ? schema : z.object(schema);
+    return new Handlebars.SafeString(new ParsedZodSchema(wrapped).hidrateFromMap(variable));
+  });
+
+  Handlebars.registerHelper("toMap", (variable: string, schema?: Record<string, ZodSchema>) => {
+    if (!schema) return "null";
+    const wrapped = schema instanceof ZodSchema ? schema : z.object(schema);
+    return new Handlebars.SafeString(new ParsedZodSchema(wrapped).toMap(variable));
   });
 
   Handlebars.registerHelper("docs", function (this: unknown, options: HelperOptions) {
@@ -49,6 +56,7 @@ export default function assembleTemplates() {
 
   Handlebars.registerPartial("utils", loadTextFile(resolve(__dirname, "./templates/utils.hbs")));
   Handlebars.registerPartial("declaration", loadTextFile(resolve(__dirname, "./templates/declaration.hbs")));
+  Handlebars.registerPartial("error", loadTextFile(resolve(__dirname, "./templates/error.hbs")));
   Handlebars.registerPartial("method", loadTextFile(resolve(__dirname, "./templates/method.hbs")));
   Handlebars.registerPartial("request", loadTextFile(resolve(__dirname, "./templates/request.hbs")));
   return Handlebars.compile(loadTextFile(resolve(__dirname, "./templates/main.hbs")));

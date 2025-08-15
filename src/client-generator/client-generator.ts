@@ -29,6 +29,15 @@ type ApiClient = {
   }[];
 };
 
+function methodName(target: "typescript" | "dart", route: AnyRoute) {
+  switch (target) {
+    case "typescript":
+      return `${route.method.toUpperCase()} ${route.url}`;
+    case "dart":
+      return `${route.method.toUpperCase()}_${route.url.replaceAll(/[^\w]+/gi, "_")}`;
+  }
+}
+
 export function generateClient(opts: {
   name: string;
   target: "typescript" | "dart";
@@ -47,7 +56,7 @@ export function generateClient(opts: {
         url: route.url,
         httpMethod: route.method === "rpc" ? "post" : route.method,
         isRPC: route.method === "rpc",
-        methodName: `${route.method.toUpperCase()} ${route.url}`,
+        methodName: methodName(opts.target, route),
         title: cfg.title,
         description: cfg.description,
         section: cfg.section,

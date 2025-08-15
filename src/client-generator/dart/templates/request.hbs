@@ -1,22 +1,25 @@
-this.request('{{httpMethod}}', `{{{url2Template url}}}`, {
+request(HttpMethod.{{uppercase httpMethod}}, '{{url}}', 
 {{#if arguments}}
   {{#if isRPC}}
     data
   {{else}}
     {{#with arguments}}
-      query: {
-      {{#each query}}
-        '{{@key}}': args.query?.['{{@key}}'],
-      {{/each}}
-      }, headers: {
-      {{#each headers}}
-        '{{@key}}': args.headers['{{@key}}'],
-      {{/each}}
-      },
+      {{#if query}}
+        query: {
+        {{#each query}}
+          '{{@key}}': query?.{{@key}},
+        {{/each}}
+      },{{/if}}
+      {{#if headers}}
+        headers: {
+        {{#each headers}}
+          '{{@key}}': headers['{{@key}}'],
+        {{/each}}
+      },{{/if}}
       {{#if body}}
-        data: args.body,
+        body: {{toMap "body" body}},
       {{/if}}
     {{/with}}
   {{/if}}
 {{/if}}
-});
+);

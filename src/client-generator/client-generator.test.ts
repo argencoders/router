@@ -10,18 +10,22 @@ describe("Client generator", () => {
       target: "dart",
       routes: [
         {
-          method: "get",
-          url: "/users",
-          key: "GET /users",
+          method: "post",
+          url: "/login",
+          key: "POST /login",
           config: {
-            params: {
-              search: z.string(),
-              page: z.number().optional(),
-              order: z.enum(["ascending", "descending"]),
-            },
-            response: z.object({
-              name: z.string(),
+            body: z.object({
+              email: z.string(),
+              password: z.string(),
             }),
+            response: z.object({
+              accessToken: z.string(),
+              userId: z.string(),
+              expiresOn: z.date(),
+            }),
+            errors: {
+              INCORRECT_EMAIL_OR_PASSWORD: "Incorrect email or password.",
+            },
             async handler() {},
           },
         },

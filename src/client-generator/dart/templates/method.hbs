@@ -1,46 +1,53 @@
 {{#docs}}
   {{{title}}}
-  {{#if description}}// {{{description}}}{{/if}}
+  {{#if description}}{{{description}}}{{/if}}
   {{#if deprecated}}@Deprecated({{coalesce deprecationMessage 'Should not be used and will be removed in the future.' }}){{/if}}
 {{/docs}}
-Future<Result<{{zodRecord returnType}}, {{methodName}}_Errors>> {{methodName}}({{#if arguments}}  
-  {{#with arguments }}
-  {
-    {{#if ../isRPC}}
-      {{zodRecord body}} data
+Future<Result<{{zodRecord (concat methodName "response") returnType}}, 
+{{#if errors}}
+  {{methodName}}_Errors
+{{else}}
+  String
+{{/if}}>> {{methodName}}({{#if arguments}}  
+    {{#if isRPC}}
+      {{zodRecord (concat methodName "body") arguments.body}} data
     {{else}}
-          {{#if params}}
-            required {{zodRecord params}} params,
+  {
+          {{#if arguments.params}}
+            required {{zodRecord (concat methodName "params") arguments.params}} params,
           {{/if}}
-          {{#if query}}
-            {{zodRecord query}}? query,
+          {{#if arguments.query}}
+            {{zodRecord (concat methodName "query") arguments.query}}? query,
           {{/if}}
-          {{#if body}}
-            required {{zodRecord body}} body,
+          {{#if arguments.body}}
+            required {{zodRecord (concat methodName "body") arguments.body}} body,
           {{/if}}
-          {{#if headers}}
-            required {{zodRecord headers}} headers,
+          {{#if arguments.headers}}
+            required {{zodRecord (concat methodName "headers") arguments.headers}} headers,
           {{/if}}
-    {{/if}}
   }
-  {{/with}}
+    {{/if}}
 {{/if}}) async {
   {{#if deprecated~}}
     print('[{{methodName}}] endpoint was deprecated - {{coalesce deprecationMessage 'should not be used and will be removed in the future.' }}');
   {{~/if}}
-    Map<String, dynamic> result;
+    dynamic result;
 
     try {
       result =  await {{> request}}
     } on {{className}}HttpError catch (e) {
-      final {{methodName}}_Errors error = {{methodName}}_Errors.values.firstWhere(
-        (x) => x.name == e.code,
-      );
-      return Result.failure(error, e.stackTrace);
+      {{#if errors}}
+        final {{methodName}}_Errors error = {{methodName}}_Errors.values.firstWhere(
+          (x) => x.name == e.code,
+        );
+        return Result.failure(error, e.stackTrace);
+      {{else}}
+        return Result.failure(e.code, e.stackTrace);
+      {{/if}}
     }
 
   {{#if returnType}}
-    return Result.success({{hidrateFromMap "result" returnType}});
+    return Result.success({{hidrateFromMap "result" (concat methodName "response") returnType}});
   {{else}}
     return Result.success(null);
   {{/if}}

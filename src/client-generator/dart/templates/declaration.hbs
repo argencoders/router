@@ -1,10 +1,12 @@
-{{#if arguments}}
-  {{#with arguments}}
-    {{#if body}}
-      {{zodDeclarations body}}
-    {{/if}}
-    {{#if params}}
-      {{zodDeclarations params}}
-    {{/if}}
-  {{/with}}
+{{#if arguments.params}}
+  {{zodDeclarations (concat methodName "params") arguments.params}}
+{{/if}}
+{{#if arguments.query}}
+  {{zodDeclarations (concat methodName "query") arguments.query}}
+{{/if}}
+{{#if arguments.body}}
+  {{zodDeclarations (concat methodName "body") arguments.body}}
+{{/if}}
+{{#if returnType}}
+  {{zodDeclarations (concat methodName "response") returnType}}
 {{/if}}

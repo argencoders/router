@@ -1,25 +1,23 @@
 request(HttpMethod.{{uppercase httpMethod}}, '{{url}}', 
 {{#if arguments}}
   {{#if isRPC}}
-    data
+    body: {{toMap "data" arguments.body}},
   {{else}}
-    {{#with arguments}}
-      {{#if query}}
-        query: {
-        {{#each query}}
-          '{{@key}}': query?.{{@key}},
-        {{/each}}
-      },{{/if}}
-      {{#if headers}}
-        headers: {
-        {{#each headers}}
-          '{{@key}}': headers['{{@key}}'],
-        {{/each}}
-      },{{/if}}
-      {{#if body}}
-        body: {{toMap "body" body}},
-      {{/if}}
-    {{/with}}
+    {{#if arguments.query}}
+      query: {
+      {{#each arguments.query}}
+        '{{@key}}': query?.{{@key}},
+      {{/each}}
+    },{{/if}}
+    {{#if arguments.headers}}
+      headers: {
+      {{#each arguments.headers}}
+        '{{@key}}': headers['{{@key}}'],
+      {{/each}}
+    },{{/if}}
+    {{#if arguments.body}}
+      body: {{toMap "body" arguments.body}},
+    {{/if}}
   {{/if}}
 {{/if}}
 );

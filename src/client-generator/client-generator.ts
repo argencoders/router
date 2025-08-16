@@ -72,7 +72,7 @@ export function generateClient(opts: {
                 body: cfg.body,
               }
             : undefined,
-        errors: cfg.errors,
+        errors: cfg.errors && Object.keys(cfg.errors).length > 0 ? cfg.errors : undefined,
         returnType: cfg.response,
       };
     }),

@@ -54,7 +54,7 @@ export class ParsedZodSchema {
       case z.ZodFirstPartyTypeKind.ZodEnum:
         return {
           kind: "enum",
-          enumName: propertyPath.map((x) => pascalCase(x)).join("_") ?? "UnnamedEnum",
+          enumName: propertyPath.map((x) => pascalCase(x)).join("_") ?? "Unnamed",
           values: (typeDef as ZodEnumDef).values,
           isOptional,
         };
@@ -73,7 +73,7 @@ export class ParsedZodSchema {
     }
   }
 
-  getDeclarations(): string {
+  getDeclarations(enumPrefix: string): string {
     function _processNode(type: TypeMetadata): string {
       switch (type.kind) {
         case "list":
@@ -81,7 +81,7 @@ export class ParsedZodSchema {
         case "object":
           return type.items.map((x) => _processNode(x)).join("\n");
         case "enum":
-          return `enum ${type.enumName}Enum { ${type.values.join(", ")} }`;
+          return `enum ${enumPrefix}_${type.enumName}_Enum { ${type.values.join(", ")} }`;
         default:
           return "";
       }
@@ -89,7 +89,7 @@ export class ParsedZodSchema {
     return _processNode(this.parsedSchema);
   }
 
-  getRecord(): string {
+  getRecord(enumPrefix: string): string {
     function _processNode(type: TypeMetadata): string {
       switch (type.kind) {
         case "simple":
@@ -99,13 +99,13 @@ export class ParsedZodSchema {
         case "object":
           return `({${type.items.map((x) => `${_processNode(x)} ${x.name}`).join(", ")}})${type.isOptional ? "?" : ""}`;
         case "enum":
-          return `${type.enumName}Enum`;
+          return `${enumPrefix}_${type.enumName}_Enum`;
       }
     }
     return _processNode(this.parsedSchema);
   }
 
-  hidrateFromMap(variable: string): string {
+  hidrateFromMap(variable: string, enumPrefix: string): string {
     function _processNode(type: TypeMetadata, variable: string): string {
       switch (type.kind) {
         case "simple":
@@ -127,7 +127,7 @@ export class ParsedZodSchema {
         case "object":
           return `(${type.items.map((x) => `${x.name}: ${_processNode(x, `${variable}['${x.name}']`)}`).join(",\n")})`;
         case "enum":
-          return `/* TODO */`;
+          return `${enumPrefix}_${type.enumName}_Enum.values.firstWhere((i) => i.name == ${variable})`;
       }
     }
     return _processNode(this.parsedSchema, variable);

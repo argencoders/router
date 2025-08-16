@@ -20,23 +20,30 @@ export default function assembleTemplates() {
     return arg1 ?? arg2;
   });
 
-  Handlebars.registerHelper("zodDeclarations", (schema?: ZodSchema) => {
-    if (!schema) return "null";
-    const wrapped = schema instanceof ZodSchema ? schema : z.object(schema);
-    return new Handlebars.SafeString(new ParsedZodSchema(wrapped).getDeclarations());
+  Handlebars.registerHelper("concat", (...args: unknown[]) => {
+    return args.splice(0, args.length - 1).join("_");
   });
 
-  Handlebars.registerHelper("zodRecord", (schema?: ZodSchema | Record<string, ZodSchema>) => {
-    if (!schema) return "null";
+  Handlebars.registerHelper("zodDeclarations", (prefix: string, schema?: ZodSchema) => {
+    if (!schema) return "";
     const wrapped = schema instanceof ZodSchema ? schema : z.object(schema);
-    return new Handlebars.SafeString(new ParsedZodSchema(wrapped).getRecord());
+    return new Handlebars.SafeString(new ParsedZodSchema(wrapped).getDeclarations(prefix));
   });
 
-  Handlebars.registerHelper("hidrateFromMap", (variable: string, schema?: Record<string, ZodSchema>) => {
-    if (!schema) return "null";
+  Handlebars.registerHelper("zodRecord", (prefix: string, schema?: ZodSchema | Record<string, ZodSchema>) => {
+    if (!schema) return "void";
     const wrapped = schema instanceof ZodSchema ? schema : z.object(schema);
-    return new Handlebars.SafeString(new ParsedZodSchema(wrapped).hidrateFromMap(variable));
+    return new Handlebars.SafeString(new ParsedZodSchema(wrapped).getRecord(prefix));
   });
+
+  Handlebars.registerHelper(
+    "hidrateFromMap",
+    (variable: string, prefix: string, schema?: Record<string, ZodSchema>) => {
+      if (!schema) return "null";
+      const wrapped = schema instanceof ZodSchema ? schema : z.object(schema);
+      return new Handlebars.SafeString(new ParsedZodSchema(wrapped).hidrateFromMap(variable, prefix));
+    }
+  );
 
   Handlebars.registerHelper("toMap", (variable: string, schema?: Record<string, ZodSchema>) => {
     if (!schema) return "null";
@@ -49,9 +56,9 @@ export default function assembleTemplates() {
       .fn(this)
       .split("\n")
       .filter((x) => x.trim() !== "")
-      .map((x) => ` * ${x.trimStart()}`);
+      .map((x) => `/// ${x.trimStart()}`);
     if (lines.length === 0) return;
-    return new Handlebars.SafeString(["/**", ...lines, " */\n"].join("\n"));
+    return new Handlebars.SafeString(lines.join("\n"));
   });
 
   Handlebars.registerPartial("utils", loadTextFile(resolve(__dirname, "./templates/utils.hbs")));

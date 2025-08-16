@@ -1,4 +1,4 @@
-// ignore_for_file: non_constant_identifier_names, camel_case_types, constant_identifier_names
+// ignore_for_file: non_constant_identifier_names, camel_case_types, constant_identifier_names, unused_local_variable
 
 import 'dart:convert';
 import 'dart:io';
@@ -40,7 +40,7 @@ class {{className}} {
 
   {{className}}({required this.baseUrl});
 
-  Future<Map<String, dynamic>> request(
+  Future<dynamic> request(
     HttpMethod method,
     String routeUrl, {
     Map<String, dynamic>? params,

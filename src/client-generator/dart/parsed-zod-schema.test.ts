@@ -15,10 +15,10 @@ describe("Zod to Dart", () => {
 
     const parsed = new ParsedZodSchema(schema);
 
-    expect(parsed.getDeclarations()).toContain("enum Pets_ColorEnum { red, green, blue }");
-    expect(parsed.getDeclarations()).toContain("enum Book_ColorEnum { white, black }");
-    expect(parsed.getRecord()).toContain(
-      "({String? name, List<String> phones, List<({String name, double? age, Pets_ColorEnum color})> pets, ({Book_ColorEnum color}) book})"
+    expect(parsed.getDeclarations("prefix")).toContain("enum prefix_Pets_Color_Enum { red, green, blue }");
+    expect(parsed.getDeclarations("prefix")).toContain("enum prefix_Book_Color_Enum { white, black }");
+    expect(parsed.getRecord("prefix")).toContain(
+      "({String? name, List<String> phones, List<({String name, double? age, prefix_Pets_Color_Enum color})> pets, ({prefix_Book_Color_Enum color}) book})"
     );
   });
 
@@ -31,6 +31,16 @@ describe("Zod to Dart", () => {
 
     const parsed = new ParsedZodSchema(schema);
 
-    expect(parsed.getRecord()).toContain("({String name})?");
+    expect(parsed.getRecord("")).toContain("({String name})?");
+  });
+
+  it("should handle nullable types", () => {
+    const schema = z.object({
+      name: z.string().nullable(),
+    });
+
+    const parsed = new ParsedZodSchema(schema);
+
+    expect(parsed.getRecord("")).toContain("({String? name})");
   });
 });

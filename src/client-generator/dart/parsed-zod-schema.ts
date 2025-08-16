@@ -8,7 +8,7 @@ function pascalCase(str: string) {
 type TypeMetadata =
   | {
       kind: "simple";
-      type: "String" | "double" | "bool" | "Datetime" | "dynamic";
+      type: "String" | "double" | "bool" | "DateTime" | "dynamic";
       isOptional?: boolean;
     }
   | {
@@ -48,7 +48,7 @@ export class ParsedZodSchema {
       case z.ZodFirstPartyTypeKind.ZodBoolean:
         return { kind: "simple", type: "bool", isOptional };
       case z.ZodFirstPartyTypeKind.ZodDate:
-        return { kind: "simple", type: "Datetime", isOptional };
+        return { kind: "simple", type: "DateTime", isOptional };
       case z.ZodFirstPartyTypeKind.ZodArray:
         return { kind: "list", itemType: this.parse((typeDef as ZodArrayDef).type, propertyPath) };
       case z.ZodFirstPartyTypeKind.ZodEnum:
@@ -113,7 +113,7 @@ export class ParsedZodSchema {
             case "String":
             case "dynamic":
               return `${variable}`;
-            case "Datetime":
+            case "DateTime":
               return `DateTime.parse(${variable})`;
             case "double":
               return `double.parse(${variable})`;
@@ -127,7 +127,7 @@ export class ParsedZodSchema {
         case "object":
           return `(${type.items.map((x) => `${x.name}: ${_processNode(x, `${variable}['${x.name}']`)}`).join(",\n")})`;
         case "enum":
-          throw new Error("Not implemented");
+          return `/* TODO */`;
       }
     }
     return _processNode(this.parsedSchema, variable);
@@ -143,7 +143,7 @@ export class ParsedZodSchema {
         case "object":
           return `{${type.items.map((x) => `'${x.name}': ${_recordParser(x, `${variable}.${x.name}`)}`).join(",\n")}}`;
         case "enum":
-          throw new Error("Not implemented");
+          return `${variable}.name`;
       }
     }
     return _recordParser(this.parsedSchema, variable);

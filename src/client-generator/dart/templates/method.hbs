@@ -3,7 +3,7 @@
   {{#if description}}// {{{description}}}{{/if}}
   {{#if deprecated}}@Deprecated({{coalesce deprecationMessage 'Should not be used and will be removed in the future.' }}){{/if}}
 {{/docs}}
-{{methodName}}({{#if arguments}}  
+Future<Result<{{zodRecord returnType}}, {{methodName}}_Errors>> {{methodName}}({{#if arguments}}  
   {{#with arguments }}
   {
     {{#if ../isRPC}}

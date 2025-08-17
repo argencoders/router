@@ -137,7 +137,12 @@ export class ParsedZodSchema {
     function _recordParser(type: TypeMetadata, variable: string): string {
       switch (type.kind) {
         case "simple":
-          return `${variable}`;
+          switch (type.type) {
+            case "DateTime":
+              return `${variable}${type.isOptional ? "?" : ""}.toIso8601String()`;
+            default:
+              return `${variable}`;
+          }
         case "list":
           return `[${variable}.map((x) => ${_recordParser(type.itemType, "x")})]`;
         case "object":

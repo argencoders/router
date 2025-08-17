@@ -88,10 +88,20 @@ class {{className}} {
 
     if (response.statusCode == 400) {
       final decoded = jsonDecode(response.body);
-      throw {{className}}HttpError(response.statusCode, decoded['code'], decoded);
+      final errorCode = decoded['code'];
+      if (errorCode == null || errorCode == '') {
+        print(decoded); // TODO: log to console in development mode
+        throw HttpException(decoded['message'] ?? 'Invalid request');
+      }
+      throw ApiClientHttpError(response.statusCode, errorCode, decoded);
     }
 
-    throw Exception('Not implemented');
+    if (response.statusCode == 401) {
+      // TODO: use refresh code to revalidate credentials
+      throw HttpException('Unauthorized');
+    }
+
+    throw Exception('Unhandled error');
   }
 
   {{#each methods}}

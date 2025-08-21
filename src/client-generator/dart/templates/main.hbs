@@ -1,8 +1,8 @@
 // ignore_for_file: non_constant_identifier_names, camel_case_types, constant_identifier_names, unused_local_variable
 
-import 'dart:convert';
 import 'dart:io';
-import 'package:http/http.dart' as http;
+import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
 
 {{> utils}}
 
@@ -36,64 +36,40 @@ class {{className}}HttpError extends Error {
 
 
 class {{className}} {
-  final String baseUrl;
+  final Dio dio;
 
-  {{className}}({required this.baseUrl});
+  {{className}}({required this.dio});
 
   Future<dynamic> request(
     HttpMethod method,
     String routeUrl, {
-    Map<String, dynamic>? params,
     Map<String, dynamic>? query,
     Map<String, dynamic>? body,
   }) async {
-    http.Response response;
-
-    String url = routeUrl
-        .split('/')
-        .map((x) => x.startsWith(':') ? params![x] : x)
-        .join('/');
-
-    String queryString = query != null
-        ? query.keys.map((k) => '$k=${query[k]}').join('&')
-        : '';
-
-    final fullUrl = Uri.parse('$baseUrl$url$queryString');
-
-    const headers = {'Content-Type': 'application/json; charset=UTF-8'};
-
-    switch (method) {
-      case HttpMethod.POST:
-        response = await http.post(
-          fullUrl,
-          headers: headers,
-          body: jsonEncode(body),
-        );
-      case HttpMethod.GET:
-        response = await http.get(fullUrl, headers: headers);
-      case HttpMethod.PUT:
-        response = await http.put(
-          fullUrl,
-          headers: headers,
-          body: jsonEncode(body),
-        );
-      case HttpMethod.DELETE:
-        response = await http.delete(fullUrl, headers: headers);
-    }
+    final response = await dio.request(
+      url,
+      data: body,
+      queryParameters: query,
+      options: Options(
+        validateStatus: (status) =>
+            (status == null || status < 500) ? true : false,
+        responseType: ResponseType.json,
+        contentType: Headers.jsonContentType,
+        method: method.name,
+      ),
+    );
 
     if (response.statusCode == 200) {
-      final decoded = jsonDecode(response.body);
-      return decoded;
+      return response.data;
     }
 
     if (response.statusCode == 400) {
-      final decoded = jsonDecode(response.body);
-      final errorCode = decoded['code'];
+      final errorCode = response.data['code'];
       if (errorCode == null || errorCode == '') {
-        print(decoded); // TODO: log to console in development mode
-        throw HttpException(decoded['message'] ?? 'Invalid request');
+        debugPrint(response.data);
+        throw HttpException(response.data['message'] ?? 'Invalid request');
       }
-      throw ApiClientHttpError(response.statusCode, errorCode, decoded);
+      throw ApiClientHttpError(response.statusCode!, errorCode, response.data);
     }
 
     if (response.statusCode == 401) {

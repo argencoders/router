@@ -24,6 +24,15 @@ export default function assembleTemplates() {
     return args.splice(0, args.length - 1).join("_");
   });
 
+  Handlebars.registerHelper("url2Template", (url: string) => {
+    return new Handlebars.SafeString(
+      url
+        .split("/")
+        .map((x) => (x[0] === ":" ? `\${params.${x.substring(1)}}` : x))
+        .join("/")
+    );
+  });
+
   Handlebars.registerHelper("zodDeclarations", (prefix: string, schema?: ZodSchema) => {
     if (!schema) return "";
     const wrapped = schema instanceof ZodSchema ? schema : z.object(schema);

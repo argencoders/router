@@ -1,4 +1,4 @@
-request(HttpMethod.{{uppercase httpMethod}}, '{{url}}', 
+request(HttpMethod.{{uppercase httpMethod}}, '{{url2Template url}}', 
 {{#if arguments}}
   {{#if isRPC}}
     body: {{toMap "data" arguments.body}},

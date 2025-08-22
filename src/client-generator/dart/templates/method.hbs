@@ -7,7 +7,7 @@ Future<Result<{{zodRecord (concat methodName "response") returnType}},
 {{#if errors}}
   {{methodName}}_Errors
 {{else}}
-  String
+  void
 {{/if}}>> {{methodName}}({{#if arguments}}  
     {{#if isRPC}}
       {{zodRecord (concat methodName "body") arguments.body}} data
@@ -42,7 +42,7 @@ Future<Result<{{zodRecord (concat methodName "response") returnType}},
         );
         return Result.failure(error, e.stackTrace);
       {{else}}
-        return Result.failure(e.code, e.stackTrace);
+        throw e;
       {{/if}}
     }
 

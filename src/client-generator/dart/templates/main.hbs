@@ -51,8 +51,12 @@ class {{className}} {
       data: body,
       queryParameters: query,
       options: Options(
-        validateStatus: (status) =>
-            (status == null || status < 500) ? true : false,
+        validateStatus: (status) {
+          if (status == null) return true;
+          if (status == 401) return false;
+          if (status < 500) return true;
+          return false;
+        },
         responseType: ResponseType.json,
         contentType: Headers.jsonContentType,
         method: method.name,

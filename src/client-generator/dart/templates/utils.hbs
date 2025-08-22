@@ -3,6 +3,31 @@ sealed class Result<T, E> {
 
   factory Result.success(T value) = Success<T, E>;
   factory Result.failure(E error, [StackTrace? stackTrace]) = Failure<T, E>;
+
+  /// Handle success and error in a structured way
+  R on<R>({
+    required R Function(T value) success,
+    required R Function(E error, StackTrace? stackTrace) error,
+  }) {
+    switch (this) {
+      case Success<T, E> successCase:
+        return success(successCase.value);
+      case Failure<T, E> failureCase:
+        return error(failureCase.error, failureCase.stackTrace);
+    }
+  }
+
+  Future<R> onAsync<R>({
+    required Future<R> Function(T value) success,
+    required Future<R> Function(E error, StackTrace? stackTrace) error,
+  }) async {
+    switch (this) {
+      case Success<T, E> successCase:
+        return await success(successCase.value);
+      case Failure<T, E> failureCase:
+        return await error(failureCase.error, failureCase.stackTrace);
+    }
+  }
 }
 
 class Success<T, E> extends Result<T, E> {

@@ -46,42 +46,39 @@ class {{className}} {
     Map<String, dynamic>? query,
     Map<String, dynamic>? body,
   }) async {
-    final response = await dio.request(
-      url,
-      data: body,
-      queryParameters: query,
-      options: Options(
-        validateStatus: (status) {
-          if (status == null) return true;
-          if (status == 401) return false;
-          if (status < 500) return true;
-          return false;
-        },
-        responseType: ResponseType.json,
-        contentType: Headers.jsonContentType,
-        method: method.name,
-      ),
-    );
+    late final Response response;
+
+    try {
+      response = await dio.request(
+        url,
+        data: body,
+        queryParameters: query,
+        options: Options(
+          validateStatus: (status) => status != null && status < 300,
+          responseType: ResponseType.json,
+          contentType: Headers.jsonContentType,
+          method: method.name,
+        ),
+      );
+    } on DioException catch (e) {
+      if (e.response!.statusCode == 400) {
+        final errorCode = e.response!.data['code'];
+        if (errorCode == null || errorCode == '') {
+          debugPrint(e.response!.data);
+          throw HttpException(e.response!.data['message'] ?? 'Invalid request');
+        }
+        throw ApiClientHttpError(
+          e.response!.statusCode!,
+          errorCode,
+          e.response!.data,
+        );
+      }
+      rethrow;
+    }
 
     if (response.statusCode == 200) {
       return response.data;
     }
-
-    if (response.statusCode == 400) {
-      final errorCode = response.data['code'];
-      if (errorCode == null || errorCode == '') {
-        debugPrint(response.data);
-        throw HttpException(response.data['message'] ?? 'Invalid request');
-      }
-      throw ApiClientHttpError(response.statusCode!, errorCode, response.data);
-    }
-
-    if (response.statusCode == 401) {
-      // TODO: use refresh code to revalidate credentials
-      throw HttpException('Unauthorized');
-    }
-
-    throw Exception('Unhandled error');
   }
 
   {{#each methods}}

@@ -33,18 +33,18 @@ Future<Result<{{zodRecord (concat methodName "response") returnType}},
   {{~/if}}
     dynamic result;
 
+  {{#if errors}}
     try {
       result =  await {{> request}}
     } on {{className}}HttpError catch (e) {
-      {{#if errors}}
-        final {{methodName}}_Errors error = {{methodName}}_Errors.values.firstWhere(
-          (x) => x.name == e.code,
-        );
-        return Result.failure(error, e.stackTrace);
-      {{else}}
-        throw e;
-      {{/if}}
+      final {{methodName}}_Errors error = {{methodName}}_Errors.values.firstWhere(
+        (x) => x.name == e.code,
+      );
+      return Result.failure(error, e.stackTrace);
     }
+  {{else}}
+    result =  await {{> request}}
+  {{/if}}
 
   {{#if returnType}}
     return Result.success({{hidrateFromMap "result" (concat methodName "response") returnType}});

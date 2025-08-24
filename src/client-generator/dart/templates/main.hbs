@@ -1,8 +1,6 @@
 // ignore_for_file: non_constant_identifier_names, camel_case_types, constant_identifier_names, unused_local_variable
 
-import 'dart:io';
-import 'package:dio/dio.dart';
-import 'package:flutter/material.dart';
+part of 'api_client.dart';
 
 {{> utils}}
 
@@ -35,10 +33,10 @@ class {{className}}HttpError extends Error {
 {{/each}}
 
 
-class {{className}} {
+class _{{className}} {
   final Dio dio;
 
-  {{className}}({required this.dio});
+  _{{className}}({required this.dio});
 
   Future<dynamic> request(
     HttpMethod method,

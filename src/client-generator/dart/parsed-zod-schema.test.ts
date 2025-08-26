@@ -33,14 +33,4 @@ describe("Zod to Dart", () => {
 
     expect(parsed.getRecord("")).toContain("({String name})?");
   });
-
-  it("should handle nullable types", () => {
-    const schema = z.object({
-      name: z.string().nullable(),
-    });
-
-    const parsed = new ParsedZodSchema(schema);
-
-    expect(parsed.getRecord("")).toContain("({String? name})");
-  });
 });

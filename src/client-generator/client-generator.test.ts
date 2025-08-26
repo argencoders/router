@@ -3,7 +3,7 @@ import { generateClient } from "./client-generator.js";
 import { describe, expect, it } from "vitest";
 
 describe("Client generator", () => {
-  it("should generate Dart API client", () => {
+  it.only("should generate Dart API client", () => {
     const generated = generateClient({
       className: "ApiClient",
       name: "ApiClientName",
@@ -17,6 +17,7 @@ describe("Client generator", () => {
             body: z.object({
               email: z.string(),
               password: z.string(),
+              rememberMe: z.boolean().optional(),
             }),
             response: z.object({
               accessToken: z.string(),
@@ -63,7 +64,7 @@ describe("Client generator", () => {
     console.log(generated);
   });
 
-  it.only("should handle enums in body", () => {
+  it("should handle enums in body", () => {
     const generated = generateClient({
       className: "ApiClient",
       name: "ApiClientName",

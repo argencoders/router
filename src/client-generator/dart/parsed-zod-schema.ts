@@ -1,5 +1,14 @@
 import { inspect } from "util";
-import { z, ZodTypeAny, ZodObject, ZodFirstPartyTypeKind, ZodOptional, ZodEnumDef, ZodArrayDef } from "zod";
+import {
+  z,
+  ZodTypeAny,
+  ZodObject,
+  ZodFirstPartyTypeKind,
+  ZodOptional,
+  ZodEnumDef,
+  ZodArrayDef,
+  ZodNullable,
+} from "zod";
 
 function pascalCase(str: string) {
   return str.charAt(0).toUpperCase() + str.slice(1);
@@ -10,22 +19,26 @@ type TypeMetadata =
       kind: "simple";
       type: "String" | "double" | "bool" | "DateTime" | "dynamic";
       isOptional?: boolean;
+      isNullable?: boolean;
     }
   | {
       kind: "list";
       itemType: TypeMetadata;
       isOptional?: boolean;
+      isNullable?: boolean;
     }
   | {
       kind: "object";
       items: (TypeMetadata & { name: string })[];
       isOptional?: boolean;
+      isNullable?: boolean;
     }
   | {
       kind: "enum";
       enumName: string;
       values: readonly string[];
       isOptional?: boolean;
+      isNullable?: boolean;
     };
 
 export class ParsedZodSchema {
@@ -39,37 +52,45 @@ export class ParsedZodSchema {
     const typeDef = schema instanceof ZodOptional ? schema._def.innerType._def : schema._def;
     const kind = typeDef.typeName as ZodFirstPartyTypeKind;
     const isOptional = schema instanceof ZodOptional;
+    const isNullable = schema instanceof ZodNullable;
 
     switch (kind) {
       case z.ZodFirstPartyTypeKind.ZodString:
-        return { kind: "simple", type: "String", isOptional };
+        return { kind: "simple", type: "String", isOptional, isNullable };
       case z.ZodFirstPartyTypeKind.ZodNumber:
-        return { kind: "simple", type: "double", isOptional };
+        return { kind: "simple", type: "double", isOptional, isNullable };
       case z.ZodFirstPartyTypeKind.ZodBoolean:
-        return { kind: "simple", type: "bool", isOptional };
+        return { kind: "simple", type: "bool", isOptional, isNullable };
       case z.ZodFirstPartyTypeKind.ZodDate:
-        return { kind: "simple", type: "DateTime", isOptional };
+        return { kind: "simple", type: "DateTime", isOptional, isNullable };
       case z.ZodFirstPartyTypeKind.ZodArray:
-        return { kind: "list", itemType: this.parse((typeDef as ZodArrayDef).type, propertyPath) };
+        return {
+          kind: "list",
+          itemType: this.parse((typeDef as ZodArrayDef).type, propertyPath),
+          isOptional,
+          isNullable,
+        };
       case z.ZodFirstPartyTypeKind.ZodEnum:
         return {
           kind: "enum",
           enumName: propertyPath.map((x) => pascalCase(x)).join("_") ?? "Unnamed",
           values: (typeDef as ZodEnumDef).values,
           isOptional,
+          isNullable,
         };
       case z.ZodFirstPartyTypeKind.ZodObject:
         const shape = isOptional ? schema._def.innerType.shape : (schema as ZodObject<any>).shape;
         return {
           kind: "object",
           isOptional,
+          isNullable,
           items: Object.keys(shape).map((key) => {
             let fieldSchema: ZodTypeAny = shape[key];
             return { name: key, ...this.parse(fieldSchema, [...propertyPath, key]) };
           }),
         };
       default:
-        return { kind: "simple", type: "dynamic", isOptional };
+        return { kind: "simple", type: "dynamic", isOptional, isNullable };
     }
   }
 
@@ -93,11 +114,13 @@ export class ParsedZodSchema {
     function _processNode(type: TypeMetadata): string {
       switch (type.kind) {
         case "simple":
-          return `${type.type}${type.isOptional ? "?" : ""}`;
+          return `${type.type}${type.isOptional || type.isNullable ? "?" : ""}`;
         case "list":
-          return `List<${_processNode(type.itemType)}>${type.isOptional ? "?" : ""}`;
+          return `List<${_processNode(type.itemType)}>${type.isOptional || type.isNullable ? "?" : ""}`;
         case "object":
-          return `({${type.items.map((x) => `${_processNode(x)} ${x.name}`).join(", ")}})${type.isOptional ? "?" : ""}`;
+          return `({${type.items.map((x) => `${_processNode(x)} ${x.name}`).join(", ")}})${
+            type.isOptional || type.isNullable ? "?" : ""
+          }`;
         case "enum":
           return `${enumPrefix}_${type.enumName}_Enum`;
       }
@@ -139,14 +162,20 @@ export class ParsedZodSchema {
         case "simple":
           switch (type.type) {
             case "DateTime":
-              return `${variable}${type.isOptional ? "?" : ""}.toIso8601String()`;
+              return `${variable}${type.isOptional || type.isNullable ? "?" : ""}.toIso8601String()`;
             default:
               return `${variable}`;
           }
         case "list":
           return `[${variable}.map((x) => ${_recordParser(type.itemType, "x")})]`;
         case "object":
-          return `{${type.items.map((x) => `'${x.name}': ${_recordParser(x, `${variable}.${x.name}`)}`).join(",\n")}}`;
+          const map = `{${type.items
+            .map((x) => `'${x.name}': ${_recordParser(x, `${variable}.${x.name}`)}`)
+            .join(",\n")}}`;
+          const optionals = type.items.filter((x) => x.isOptional);
+          return optionals.length === 0
+            ? map
+            : `Map.fromEntries(${map}.entries.where((x) => ${optionals.map((x) => `x.value != null`).join(" && ")}))`;
         case "enum":
           return `${variable}.name`;
       }

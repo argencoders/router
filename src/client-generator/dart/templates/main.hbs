@@ -62,7 +62,11 @@ class _{{className}} {
       if (e.response!.statusCode == 400) {
         final errorCode = e.response!.data['code'];
         if (errorCode == null || errorCode == '') {
-          debugPrint(e.response!.data);
+          if (e.response != null &&
+              e.response?.data != null &&
+              e.response?.data['devInfo'] != null) {
+            debugPrint(jsonEncode(e.response!.data['devInfo']));
+          }
           throw HttpException(e.response!.data['message'] ?? 'Invalid request');
         }
         throw ApiClientHttpError(

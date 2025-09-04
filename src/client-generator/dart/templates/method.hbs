@@ -7,7 +7,7 @@ Future<Result<{{zodRecord (concat methodName "response") returnType}},
 {{#if errors}}
   {{methodName}}_Errors
 {{else}}
-  void
+  ERROR_PLACEHOLDER
 {{/if}}>> {{methodName}}({{#if arguments}}  
     {{#if isRPC}}
       {{zodRecord (concat methodName "body") arguments.body}} data

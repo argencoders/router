@@ -129,6 +129,21 @@ export class ParsedZodSchema {
   }
 
   hidrateFromMap(variable: string, enumPrefix: string): string {
+    function _processRecord(type: TypeMetadata): string {
+      switch (type.kind) {
+        case "simple":
+          return `${type.type}${type.isOptional || type.isNullable ? "?" : ""}`;
+        case "list":
+          return `List<${_processRecord(type.itemType)}>${type.isOptional || type.isNullable ? "?" : ""}`;
+        case "object":
+          return `({${type.items.map((x) => `${_processRecord(x)} ${x.name}`).join(", ")}})${
+            type.isOptional || type.isNullable ? "?" : ""
+          }`;
+        case "enum":
+          return `${enumPrefix}_${type.enumName}_Enum`;
+      }
+    }
+
     function _processNode(type: TypeMetadata, variable: string): string {
       switch (type.kind) {
         case "simple":
@@ -146,7 +161,9 @@ export class ParsedZodSchema {
               throw new Error("Not implemented");
           }
         case "list":
-          return `${variable}.map((x) => ${_processNode(type.itemType, "x")})`;
+          return `${variable}.map((x) => ${_processNode(type.itemType, "x")}).cast<${_processRecord(
+            type.itemType
+          )}>().toList()`;
         case "object":
           return `(${type.items.map((x) => `${x.name}: ${_processNode(x, `${variable}['${x.name}']`)}`).join(",\n")})`;
         case "enum":
